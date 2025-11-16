@@ -1,91 +1,110 @@
-Social_Media_Feed Backend – ProDev BE
+Social Media Feed Backend – ProDev BE
 
-A backend system for powering a scalable social media feed with posts, comments, and user interactions.
-This project demonstrates how backend engineers can design flexible GraphQL APIs, manage heavy user activity, optimize database queries, and build a real-world social platform backend using Django, PostgreSQL, and GraphQL.
+A backend service that powers a scalable social media feed with posts, comments, and user interactions.
+Built with Django, PostgreSQL, and GraphQL, this project demonstrates real-world backend engineering skills: schema design, efficient querying, interaction tracking, and flexible data fetching using GraphQL.
 
 📌 Project Overview
 
-This backend provides the core features required for a social media feed:
+This backend mimics essential features behind platforms like Instagram, Facebook, or X:
 
-Users can create posts.
+Create posts
 
-Other users can like, comment, and share these posts.
+Comment on posts
 
-The feed can be queried flexibly using GraphQL.
+Like / Unlike posts
 
-The system is designed to handle high-traffic interactions efficiently.
+Share posts
 
-A hosted GraphQL Playground is included for easy testing of the API.
+Fetch everything using flexible GraphQL queries
+
+A hosted GraphQL Playground is included for easy testing.
 
 🎯 Goals
+Post Management
 
-Post Management – Create, fetch, and manage posts.
+Create, fetch, and manage posts.
 
-Interaction Management – Handle likes, comments, and shares.
+Interaction Management
 
-Flexible Querying – Use GraphQL to allow custom, nested, and efficient queries.
+Handle likes, comments, and shares.
 
-Scalability – Use PostgreSQL indexes, Django Query optimization, and GraphQL resolvers that scale.
+Flexible Querying
+
+GraphQL enables custom, nested, and efficient queries.
+
+Scalability
+
+Uses PostgreSQL indexes, efficient Django querysets, and optimized GraphQL resolvers.
 
 🧰 Tech Stack
 Layer Technology
 Backend Framework Django
 Database PostgreSQL
-API Query Language GraphQL (Graphene Django)
-Testing Interface GraphiQL / GraphQL Playground
+API Layer GraphQL (Graphene-Django)
+Testing UI GraphiQL / GraphQL Playground
 ORM Django ORM
-
 📂 Project Structure
-
 social_media_feed/
 │
 ├── social_media_feed/
 │ ├── settings.py
 │ ├── schema.py
 │ ├── urls.py
-│ └── wsgi.py
+│ ├── wsgi.py
 │
-├── core/
+├── feed/
 │ ├── models.py
 │ ├── schema.py
 │ ├── admin.py
-│ └── apps.py
+│ ├── apps.py
 │
 ├── requirements.txt
 ├── manage.py
 └── README.md
 
-⚙️ Features
+📐 ERD (Entity-Relationship Diagram)
+Simple Models-Only Version
+erDiagram
 
-1. GraphQL APIs
+    USER ||--o{ POST : "creates"
+    USER ||--o{ COMMENT : "writes"
+    USER ||--o{ INTERACTION : "performs"
 
-Query posts, comments, and user interactions.
+    POST ||--o{ COMMENT : "has"
+    POST ||--o{ INTERACTION : "receives"
 
-Fetch nested data (e.g., post → comments → author).
+    USER {
+        int id PK
+        string username
+        string email
+    }
 
-Mutations for creating posts, commenting, liking, and sharing.
+    POST {
+        int id PK
+        int author_id FK
+        text content
+        int likes_count
+        int comments_count
+        int shares_count
+        datetime created_at
+        datetime updated_at
+    }
 
-2. Interaction Management
+    COMMENT {
+        int id PK
+        int post_id FK
+        int author_id FK
+        text content
+        datetime created_at
+    }
 
-Users can like/unlike posts.
-
-Users can add comments.
-
-Shares are tracked.
-
-Interaction counters are stored for performance.
-
-3. Scalable Schema Design
-
-Database indexes for heavy-query fields.
-
-Efficient queryset usage (select_related, prefetch_related).
-
-Pagination support (via first and skip arguments).
-
-4. Hosted Playground
-
-Access to a public GraphQL Playground to test all API features.
+    INTERACTION {
+        int id PK
+        int post_id FK
+        int user_id FK
+        enum type  "like | share"
+        datetime created_at
+    }
 
 🚀 Getting Started
 
@@ -95,40 +114,38 @@ Access to a public GraphQL Playground to test all API features.
 
 2. Create Virtual Environment
    python -m venv venv
-   source venv/bin/activate # macOS/Linux
+   source venv/bin/activate # macOS / Linux
    venv\Scripts\activate # Windows
 
 3. Install Dependencies
    pip install -r requirements.txt
 
-4. Set Up PostgreSQL
+4. Create PostgreSQL Database
+   CREATE DATABASE social_feed;
 
-Create a PostgreSQL database named social_feed.
-CREATE DATABASE social_feed;
+5. Update Database Config in settings.py
+   DATABASES = {
+   'default': {
+   'ENGINE': 'django.db.backends.postgresql',
+   'NAME': 'social_feed',
+   'USER': 'postgres',
+   'PASSWORD': 'postgres',
+   'HOST': 'localhost',
+   'PORT': '5432',
+   }
+   }
 
-Update your database credentials in config/settings.py:
-DATABASES = {
-'default': {
-'ENGINE': 'django.db.backends.postgresql',
-'NAME': 'social_feed',
-'USER': 'postgres',
-'PASSWORD': 'postgres',
-'HOST': 'localhost',
-'PORT': '5432',
-}
-} 5. Run Migrations
-python manage.py makemigrations
-python manage.py migrate
+6. Run Migrations
+   python manage.py migrate
 
-6. Run the Server
+7. Start the Server
    python manage.py runserver
 
-Access the local GraphQL interface:
+Local GraphQL UI:
 👉 http://127.0.0.1:8000/graphql/
 
-📌 GraphQL Usage
-Sample Queries
-Fetch all posts
+🔍 Example GraphQL Queries
+Fetch All Posts
 query {
 posts(first: 10) {
 id
@@ -141,24 +158,22 @@ username
 }
 }
 
-Fetch a single post
+Fetch Single Post
 query {
 post(id: 1) {
 id
 content
 comments {
 content
-author {
-username
-}
+author { username }
 }
 }
 }
 
-Sample Mutations
-Create a post
+✏️ Example Mutations
+Create Post
 mutation {
-createPost(content: "Hello GraphQL!") {
+createPost(content: "Hello World") {
 post {
 id
 content
@@ -166,9 +181,9 @@ content
 }
 }
 
-Add a comment
+Create Comment
 mutation {
-createComment(postId: 1, content: "Nice post!") {
+createComment(postId: 1, content: "Nice!") {
 comment {
 id
 content
@@ -186,7 +201,7 @@ likesCount
 }
 }
 
-Share a post
+Share Post
 mutation {
 sharePost(postId: 1) {
 post {
@@ -195,59 +210,25 @@ sharesCount
 }
 }
 
-🌍 Deployment
-
-The project is set up for deployment using:
-
-Gunicorn as the WSGI server
-
-Render, Railway, or Fly.io for hosting
-
-Procfile:
-
-web: gunicorn config.wsgi:application --log-file -
-
-Update ALLOWED_HOSTS in settings.py when you get your hosting URL.
-
 📈 Performance Optimizations
 
-Indexed fields such as:
+select_related() on foreign keys
+
+prefetch_related() on related lists
+
+Indexed fields for:
+
+post_id
+
+user_id
 
 created_at
 
-author
+type
 
-post, type (for interactions)
+Pre-computed counters for likes, comments, shares (avoids expensive COUNT queries)
 
-Optimized GraphQL resolvers:
-
-select_related for foreign keys
-
-prefetch_related for reverse relations
-
-Counter fields for:
-
-likes
-
-comments
-
-shares
-(Prevents expensive COUNT() queries)
-
-🧪 Testing
-
-Use the GraphQL Playground to test queries and mutations.
-
-Local:
-👉 http://127.0.0.1:8000/graphql/
-
-Hosted version (example):
-👉 https://your-app-name.onrender.com/graphql/
-
-📘 Git Commit Workflow
-
-Recommended commit structure for this project:
-
+📄 Commit Workflow
 feat: set up Django project with PostgreSQL
 feat: create models for posts, comments, and interactions
 feat: implement GraphQL API for querying posts and interactions
@@ -257,9 +238,9 @@ docs: update README with API usage
 
 🙌 Contributing
 
-Feel free to fork this project and build on it.
-Pull requests and suggestions are welcome.
+Pull requests are welcome.
+Please open an issue to discuss proposed improvements.
 
-📄 License
+📜 License
 
-This project is for educational and professional development purposes.
+This project is provided for academic and professional development use.
