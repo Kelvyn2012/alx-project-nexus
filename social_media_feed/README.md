@@ -47,20 +47,21 @@ ORM Django ORM
 social_media_feed/
 │
 ├── social_media_feed/
-│ ├── settings.py
-│ ├── schema.py
-│ ├── urls.py
-│ ├── wsgi.py
+│   ├── settings.py
+│   ├── schema.py
+│   ├── urls.py
+│   ├── wsgi.py
 │
 ├── feed/
-│ ├── models.py
-│ ├── schema.py
-│ ├── admin.py
-│ ├── apps.py
+│   ├── models.py
+│   ├── schema.py
+│   ├── admin.py
+│   ├── apps.py
 │
 ├── requirements.txt
 ├── manage.py
 └── README.md
+
 
 📐 ERD (Entity-Relationship Diagram)
 Simple Models-Only Version
