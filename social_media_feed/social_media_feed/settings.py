@@ -134,3 +134,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 GRAPHENE = {
     'SCHEMA': 'social_media_feed.schema.schema',
 }
+# Static files (CSS, JavaScript, images)
+STATIC_URL = '/static/'
+
+# Add this for collecting static files to be served by Django
+STATIC_ROOT = BASE_DIR / 'staticfiles'
