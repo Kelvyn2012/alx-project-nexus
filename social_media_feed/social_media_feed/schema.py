@@ -1,5 +1,5 @@
 import graphene
-from schema import Query as FeedQuery, Mutation as FeedMutation
+from core.schema import Query as FeedQuery, Mutation as FeedMutation
 
 
 class Query(FeedQuery, graphene.ObjectType):
