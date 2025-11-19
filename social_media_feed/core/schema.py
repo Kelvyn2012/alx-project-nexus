@@ -2,12 +2,10 @@ import graphene
 from graphene_django import DjangoObjectType
 from django.contrib.auth import get_user_model
 from .models import Post, Comment, Interaction
-from django.db.models import Q
-
 
 User = get_user_model()
 
-
+# Define GraphQL types for Post, Comment, and Interaction
 class UserType(DjangoObjectType):
     class Meta:
         model = User
@@ -42,6 +40,7 @@ class InteractionType(DjangoObjectType):
         fields = ("id", "user", "post", "type", "created_at")
 
 
+# Queries for fetching posts and interactions
 class Query(graphene.ObjectType):
     posts = graphene.List(
         PostType,
@@ -82,8 +81,9 @@ class Query(graphene.ObjectType):
         if user_id:
             qs = qs.filter(user_id=user_id)
         return qs
-    
-    
+
+
+# Mutations for creating posts, comments, and toggling interactions (likes and shares)
 class CreatePost(graphene.Mutation):
     class Arguments:
         content = graphene.String(required=True)
@@ -93,10 +93,8 @@ class CreatePost(graphene.Mutation):
     @classmethod
     def mutate(cls, root, info, content):
         user = info.context.user
-        # For now, allow anonymous testing by forcing a user or raising error
         if user.is_anonymous:
-            # In real app: raise GraphQLError("Authentication required")
-            user = User.objects.first()  # temp hack for demo
+            user = User.objects.first()  # Use the first user for now (for demo purposes)
 
         post = Post.objects.create(author=user, content=content)
         return CreatePost(post=post)
@@ -113,11 +111,10 @@ class CreateComment(graphene.Mutation):
     def mutate(cls, root, info, post_id, content):
         user = info.context.user
         if user.is_anonymous:
-            user = User.objects.first()  # demo
+            user = User.objects.first()  # Use the first user for now (for demo purposes)
 
         post = Post.objects.get(pk=post_id)
         comment = Comment.objects.create(post=post, author=user, content=content)
-        # update counter
         post.comments_count = Comment.objects.filter(post=post).count()
         post.save(update_fields=["comments_count"])
 
@@ -135,7 +132,7 @@ class ToggleLike(graphene.Mutation):
     def mutate(cls, root, info, post_id):
         user = info.context.user
         if user.is_anonymous:
-            user = User.objects.first()
+            user = User.objects.first()  # Use the first user for now (for demo purposes)
 
         post = Post.objects.get(pk=post_id)
 
@@ -169,7 +166,7 @@ class SharePost(graphene.Mutation):
     def mutate(cls, root, info, post_id):
         user = info.context.user
         if user.is_anonymous:
-            user = User.objects.first()
+            user = User.objects.first()  # Use the first user for now (for demo purposes)
 
         post = Post.objects.get(pk=post_id)
 
@@ -185,7 +182,9 @@ class SharePost(graphene.Mutation):
         post.save(update_fields=["shares_count"])
 
         return SharePost(post=post)
-    
+
+
+# Mutation for all actions
 class Mutation(graphene.ObjectType):
     create_post = CreatePost.Field()
     create_comment = CreateComment.Field()
