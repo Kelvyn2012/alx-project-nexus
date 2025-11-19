@@ -3,6 +3,7 @@
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -46,6 +47,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -77,17 +80,23 @@ WSGI_APPLICATION = 'social_media_feed.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+#DATABASES = {
+    #'default': {
+        #'ENGINE': 'django.db.backends.postgresql',
+        #'NAME': os.environ.get('POSTGRES_DB', 'social_feed'),
+        #'USER': os.environ.get('POSTGRES_USER', 'postgres'),
+        #'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
+        #'HOST': os.environ.get('DB_HOST', 'localhost'),
+       #'PORT': os.environ.get('DB_PORT', '5432'),
+    #}
+#}
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('POSTGRES_DB', 'social_feed'),
-        'USER': os.environ.get('POSTGRES_USER', 'postgres'),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '5432'),
-    }
+    'default': dj_database_url.config(
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
-
 
 
 # Password validation
@@ -139,3 +148,9 @@ STATIC_URL = '/static/'
 
 # Add this for collecting static files to be served by Django
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+CSRF_TRUSTED_ORIGINS = [
+    "https://alx-project-nexus-vetk.onrender.com"
+]
+CSRF_TRUSTED_ORIGINS = [
+    "https://alx-project-nexus-vetk.onrender.com"
+]
