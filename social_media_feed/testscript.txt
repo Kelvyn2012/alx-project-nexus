@@ -1,0 +1,246 @@
+# ===== 1. REGISTER =====
+mutation Register {
+  register(
+    username: "testuser", 
+    email: "test@example.com", 
+    password: "testpass123"
+  ) {
+    user { id username email }
+    token
+    refreshToken
+    success
+    errors
+  }
+}
+
+# ===== 2. LOGIN =====
+mutation Login {
+  tokenAuth(username: "testuser", password: "testpass123") {
+    token
+    refreshToken
+    user { id username }
+  }
+}
+
+# ===== 3. GET CURRENT USER =====
+query Me {
+  me {
+    id
+    username
+    email
+  }
+}
+
+# ===== 4. CREATE POSTS =====
+mutation CreatePost1 {
+  createPost(content: "First post! ") {
+    post { id content author { username } }
+    success
+  }
+}
+
+mutation CreatePost2 {
+  createPost(content: "GraphQL is awesome!") {
+    post { id content }
+    success
+  }
+}
+
+# ===== 5. GET ALL POSTS =====
+query AllPosts {
+  posts {
+    id
+    content
+    author { username }
+    likesCount
+    commentsCount
+    sharesCount
+    createdAt
+  }
+}
+
+# ===== 6. SEARCH POSTS =====
+query SearchPosts {
+  posts(search: "GraphQL") {
+    id
+    content
+  }
+}
+
+# ===== 7. GET SINGLE POST =====
+query SinglePost {
+  post(id: 1) {
+    id
+    content
+    author { username }
+    comments {
+      id
+      content
+      author { username }
+    }
+  }
+}
+
+# ===== 8. LIKE POST =====
+mutation LikePost {
+  toggleLike(postId: 1) {
+    post { id likesCount }
+    liked
+    success
+  }
+}
+
+# ===== 9. CREATE COMMENT =====
+mutation CreateComment {
+  createComment(postId: 1, content: "Great post!") {
+    comment {
+      id
+      content
+      author { username }
+    }
+    success
+  }
+}
+
+# ===== 10. SHARE POST =====
+mutation SharePost {
+  sharePost(postId: 1) {
+    post { id sharesCount }
+    success
+  }
+}
+
+# ===== 11. GET INTERACTIONS =====
+query PostInteractions {
+  interactions(postId: 1) {
+    id
+    user { username }
+    type
+    createdAt
+  }
+}
+```
+
+## 4. Using Postman (Alternative)
+
+1. **Create a new request**
+   - Method: `POST`
+   - URL: `http://localhost:8000/graphql/`
+
+2. **Set Headers**
+```
+   Content-Type: application/json
+   Authorization: Bearer YOUR_TOKEN_HERE
+
+
+
+# 1. Create multiple posts
+mutation CreatePost1 {
+  createPost(content: "First post for testing interactions") {
+    post { id content }
+    success
+  }
+}
+
+mutation CreatePost2 {
+  createPost(content: "Second post for testing") {
+    post { id content }
+    success
+  }
+}
+
+# 2. View all posts
+query AllPosts {
+  posts {
+    id
+    content
+    likesCount
+    sharesCount
+    commentsCount
+  }
+}
+
+# 3. Like first post
+mutation LikePost1 {
+  toggleLike(postId: 1) {
+    post { id likesCount }
+    liked
+    success
+  }
+}
+
+# 4. Share first post
+mutation SharePost1 {
+  sharePost(postId: 1) {
+    post { id sharesCount }
+    success
+  }
+}
+
+# 5. Like second post
+mutation LikePost2 {
+  toggleLike(postId: 2) {
+    post { id likesCount }
+    liked
+    success
+  }
+}
+
+# 6. Create a comment (also creates interaction)
+mutation AddComment {
+  createComment(postId: 1, content: "Great post!") {
+    comment { id content }
+    success
+  }
+}
+
+# 7. NOW query all interactions
+query AllInteractions {
+  interactions {
+    id
+    user {
+      id
+      username
+    }
+    post {
+      id
+      content
+    }
+    type
+    createdAt
+  }
+}
+
+# 8. Query interactions for specific post
+query Post1Interactions {
+  interactions(postId: 1) {
+    id
+    user { username }
+    type
+    createdAt
+  }
+}
+
+# 9. Query interactions by user (replace userId with your user ID)
+query UserInteractions {
+  interactions(userId: 1) {
+    id
+    post {
+      id
+      content
+    }
+    type
+    createdAt
+  }
+}
+
+# 10. Verify everything worked
+query FinalCheck {
+  posts {
+    id
+    content
+    likesCount
+    sharesCount
+    commentsCount
+  }
+}

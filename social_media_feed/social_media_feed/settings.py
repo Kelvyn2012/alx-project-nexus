@@ -2,6 +2,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 import dj_database_url
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,8 +23,8 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '.onrender.com',  # Allow all Render subdomains
-    'alx-project-nexus-vetk.onrender.com',  # Removed trailing slash
+    '.onrender.com',
+    'alx-project-nexus-vetk.onrender.com',
 ]
 
 
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Third-party
     'graphene_django',
+    'graphql_jwt.refresh_token.apps.RefreshTokenConfig',
 
     # Local
     'core',
@@ -45,13 +47,19 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Removed duplicate SecurityMiddleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# Authentication backends
+AUTHENTICATION_BACKENDS = [
+    'graphql_jwt.backends.JSONWebTokenBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 ROOT_URLCONF = 'social_media_feed.urls'
@@ -137,11 +145,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Additional locations of static files (if you have a static folder in your project)
-STATICFILES_DIRS = [
-    # BASE_DIR / 'static',  # Uncomment if you have a static folder
-]
-
 # WhiteNoise configuration
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
@@ -153,9 +156,20 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # GraphQL configuration
 GRAPHENE = {
     'SCHEMA': 'social_media_feed.schema.schema',
+    'MIDDLEWARE': [
+        'graphql_jwt.middleware.JSONWebTokenMiddleware',
+    ],
 }
 
-# CSRF trusted origins (removed duplicate)
+# JWT Settings
+GRAPHQL_JWT = {
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_EXPIRATION_DELTA': timedelta(days=7),
+    'JWT_REFRESH_EXPIRATION_DELTA': timedelta(days=30),
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
+}
+
+# CSRF trusted origins
 CSRF_TRUSTED_ORIGINS = [
     "https://alx-project-nexus-vetk.onrender.com"
 ]

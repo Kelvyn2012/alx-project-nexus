@@ -1,16 +1,20 @@
 import graphene
 from graphene_django import DjangoObjectType
 from django.contrib.auth import get_user_model
-from django.db.models import Q  
+from django.db.models import Q
+from graphql_jwt.decorators import login_required
+import graphql_jwt
+from graphql_jwt.shortcuts import get_token, create_refresh_token
 from .models import Post, Comment, Interaction
 
 User = get_user_model()
 
-# Define GraphQL types for Post, Comment, and Interaction
+
+# Define GraphQL types
 class UserType(DjangoObjectType):
     class Meta:
         model = User
-        fields = ("id", "username", "email")
+        fields = ("id", "username", "email", "date_joined")
 
 
 class PostType(DjangoObjectType):
@@ -41,8 +45,9 @@ class InteractionType(DjangoObjectType):
         fields = ("id", "user", "post", "type", "created_at")
 
 
-# Queries for fetching posts and interactions
+# Queries
 class Query(graphene.ObjectType):
+    me = graphene.Field(UserType)
     posts = graphene.List(
         PostType,
         search=graphene.String(required=False),
@@ -56,8 +61,13 @@ class Query(graphene.ObjectType):
         user_id=graphene.Int(required=False)
     )
 
+    @login_required
+    def resolve_me(self, info):
+        """Get current authenticated user"""
+        return info.context.user
+
     def resolve_posts(self, info, search=None, first=None, skip=None, **kwargs):
-        qs = Post.objects.all().select_related("author").prefetch_related("comments")
+        qs = Post.objects.all().select_related("author").prefetch_related("comments").order_by('-created_at')
 
         if search:
             qs = qs.filter(
@@ -87,7 +97,84 @@ class Query(graphene.ObjectType):
         return qs
 
 
-# Mutations for creating posts, comments, and toggling interactions (likes and shares)
+# Auth Mutations
+class RegisterUser(graphene.Mutation):
+    class Arguments:
+        username = graphene.String(required=True)
+        email = graphene.String(required=True)
+        password = graphene.String(required=True)
+
+    user = graphene.Field(UserType)
+    token = graphene.String()
+    refresh_token = graphene.String()
+    success = graphene.Boolean()
+    errors = graphene.List(graphene.String)
+
+    @classmethod
+    def mutate(cls, root, info, username, email, password):
+        try:
+            # Check if user already exists
+            if User.objects.filter(username=username).exists():
+                return RegisterUser(
+                    user=None, 
+                    token=None, 
+                    refresh_token=None, 
+                    success=False, 
+                    errors=["Username already exists"]
+                )
+            
+            if User.objects.filter(email=email).exists():
+                return RegisterUser(
+                    user=None, 
+                    token=None, 
+                    refresh_token=None, 
+                    success=False, 
+                    errors=["Email already exists"]
+                )
+
+            # Create user
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+            
+            # Generate tokens
+            token = get_token(user)
+            refresh_token = create_refresh_token(user)
+            
+            return RegisterUser(
+                user=user, 
+                token=token, 
+                refresh_token=refresh_token, 
+                success=True, 
+                errors=None
+            )
+        except Exception as e:
+            return RegisterUser(
+                user=None, 
+                token=None, 
+                refresh_token=None, 
+                success=False, 
+                errors=[str(e)]
+            )
+
+
+# Custom login mutation with refresh token
+class ObtainJSONWebTokenWithRefresh(graphql_jwt.JSONWebTokenMutation):
+    """Custom token mutation that includes refresh token"""
+    user = graphene.Field(UserType)
+    refresh_token = graphene.String()
+
+    @classmethod
+    def resolve(cls, root, info, **kwargs):
+        return cls(
+            user=info.context.user,
+            refresh_token=create_refresh_token(info.context.user)
+        )
+
+
+# Post Mutations
 class CreatePost(graphene.Mutation):
     class Arguments:
         content = graphene.String(required=True)
@@ -97,13 +184,9 @@ class CreatePost(graphene.Mutation):
     errors = graphene.List(graphene.String)
 
     @classmethod
+    @login_required
     def mutate(cls, root, info, content):
         user = info.context.user
-        if user.is_anonymous:
-            user = User.objects.first()  # Use the first user for now (for demo purposes)
-
-        if not user:
-            return CreatePost(post=None, success=False, errors=["No user found"])
 
         try:
             post = Post.objects.create(author=user, content=content)
@@ -122,13 +205,9 @@ class CreateComment(graphene.Mutation):
     errors = graphene.List(graphene.String)
 
     @classmethod
+    @login_required
     def mutate(cls, root, info, post_id, content):
         user = info.context.user
-        if user.is_anonymous:
-            user = User.objects.first()  # Use the first user for now (for demo purposes)
-
-        if not user:
-            return CreateComment(comment=None, success=False, errors=["No user found"])
 
         try:
             post = Post.objects.get(pk=post_id)
@@ -153,13 +232,9 @@ class ToggleLike(graphene.Mutation):
     errors = graphene.List(graphene.String)
 
     @classmethod
+    @login_required
     def mutate(cls, root, info, post_id):
         user = info.context.user
-        if user.is_anonymous:
-            user = User.objects.first()  # Use the first user for now (for demo purposes)
-
-        if not user:
-            return ToggleLike(post=None, liked=False, success=False, errors=["No user found"])
 
         try:
             post = Post.objects.get(pk=post_id)
@@ -197,13 +272,9 @@ class SharePost(graphene.Mutation):
     errors = graphene.List(graphene.String)
 
     @classmethod
+    @login_required
     def mutate(cls, root, info, post_id):
         user = info.context.user
-        if user.is_anonymous:
-            user = User.objects.first()  # Use the first user for now (for demo purposes)
-
-        if not user:
-            return SharePost(post=None, success=False, errors=["No user found"])
 
         try:
             post = Post.objects.get(pk=post_id)
@@ -226,9 +297,21 @@ class SharePost(graphene.Mutation):
             return SharePost(post=None, success=False, errors=[str(e)])
 
 
-# Mutation for all actions
+# All Mutations
 class Mutation(graphene.ObjectType):
+    # Authentication
+    register = RegisterUser.Field()
+    token_auth = ObtainJSONWebTokenWithRefresh.Field()  # Updated to include refresh token
+    verify_token = graphql_jwt.Verify.Field()
+    refresh_token = graphql_jwt.Refresh.Field()
+    revoke_token = graphql_jwt.Revoke.Field()
+    
+    # Post actions
     create_post = CreatePost.Field()
     create_comment = CreateComment.Field()
     toggle_like = ToggleLike.Field()
     share_post = SharePost.Field()
+
+
+# Schema
+schema = graphene.Schema(query=Query, mutation=Mutation)
