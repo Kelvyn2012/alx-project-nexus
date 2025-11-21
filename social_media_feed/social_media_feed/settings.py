@@ -1,5 +1,3 @@
-
-
 from pathlib import Path
 from dotenv import load_dotenv
 import os
@@ -18,15 +16,15 @@ load_dotenv(BASE_DIR / ".env")
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
 
 ALLOWED_HOSTS = [
-    'alx-project-nexus-vetk.onrender.com',
-    'localhost',  # Local development
-    '127.0.0.1',  # Local development
+    'localhost',
+    '127.0.0.1',
+    '.onrender.com',  # Allow all Render subdomains
+    'alx-project-nexus-vetk.onrender.com',  # Removed trailing slash
 ]
-
-
 
 
 # Application definition
@@ -47,8 +45,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Removed duplicate SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -66,6 +63,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -80,23 +78,26 @@ WSGI_APPLICATION = 'social_media_feed.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-#DATABASES = {
-    #'default': {
-        #'ENGINE': 'django.db.backends.postgresql',
-        #'NAME': os.environ.get('POSTGRES_DB', 'social_feed'),
-        #'USER': os.environ.get('POSTGRES_USER', 'postgres'),
-        #'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
-        #'HOST': os.environ.get('DB_HOST', 'localhost'),
-       #'PORT': os.environ.get('DB_PORT', '5432'),
-    #}
-#}
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
+# Use DATABASE_URL if available (Render provides this), otherwise use individual settings
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get("DATABASE_URL"),
+            conn_max_age=600
+        )
+    }
+else:
+    # Fallback to individual settings for local development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('POSTGRES_DB', 'social_feed'),
+            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
 
 
 # Password validation
@@ -133,24 +134,28 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Additional locations of static files (if you have a static folder in your project)
+STATICFILES_DIRS = [
+    # BASE_DIR / 'static',  # Uncomment if you have a static folder
+]
+
+# WhiteNoise configuration
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# GraphQL configuration
 GRAPHENE = {
     'SCHEMA': 'social_media_feed.schema.schema',
 }
-# Static files (CSS, JavaScript, images)
-STATIC_URL = '/static/'
 
-# Add this for collecting static files to be served by Django
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-CSRF_TRUSTED_ORIGINS = [
-    "https://alx-project-nexus-vetk.onrender.com"
-]
+# CSRF trusted origins (removed duplicate)
 CSRF_TRUSTED_ORIGINS = [
     "https://alx-project-nexus-vetk.onrender.com"
 ]
