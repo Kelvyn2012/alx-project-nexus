@@ -1,5 +1,47 @@
 from django.conf import settings
 from django.db import models
+from django.contrib.auth.models import User
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='profile'
+    )
+    bio = models.TextField(blank=True, null=True, max_length=500)
+    date_of_birth = models.DateField(blank=True, null=True)
+    location = models.CharField(max_length=100, blank=True, null=True)
+    profile_picture = models.TextField(blank=True, null=True)  # Store base64 or URL
+    followers_count = models.PositiveIntegerField(default=0)
+    following_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Profile of {self.user.username}"
+
+
+class Follow(models.Model):
+    follower = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='following'
+    )
+    following = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='followers'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('follower', 'following')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.follower.username} follows {self.following.username}"
+
 
 class Post(models.Model):
     author = models.ForeignKey(
