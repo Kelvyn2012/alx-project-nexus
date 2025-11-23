@@ -5,16 +5,50 @@ from django.db.models import Q
 from graphql_jwt.decorators import login_required
 import graphql_jwt
 from graphql_jwt.shortcuts import get_token, create_refresh_token
-from .models import Post, Comment, Interaction
+from .models import Post, Comment, Interaction, UserProfile, Follow
 
 User = get_user_model()
 
 
-# Define GraphQL types
+# ============================================
+# GraphQL Type Definitions
+# ============================================
+
+class UserProfileType(DjangoObjectType):
+    class Meta:
+        model = UserProfile
+        fields = ("id", "user", "bio", "date_of_birth", "location",
+                  "profile_picture", "followers_count", "following_count",
+                  "created_at", "updated_at")
+
+
 class UserType(DjangoObjectType):
+    profile = graphene.Field(UserProfileType)
+    is_following = graphene.Boolean()
+
     class Meta:
         model = User
         fields = ("id", "username", "email", "date_joined")
+
+    def resolve_profile(self, info):
+        try:
+            return self.profile
+        except UserProfile.DoesNotExist:
+            return None
+
+    def resolve_is_following(self, info):
+        if info.context.user.is_authenticated:
+            return Follow.objects.filter(
+                follower=info.context.user,
+                following=self
+            ).exists()
+        return False
+
+
+class FollowType(DjangoObjectType):
+    class Meta:
+        model = Follow
+        fields = ("id", "follower", "following", "created_at")
 
 
 class PostType(DjangoObjectType):
@@ -45,9 +79,19 @@ class InteractionType(DjangoObjectType):
         fields = ("id", "user", "post", "type", "created_at")
 
 
+# ============================================
 # Queries
+# ============================================
+
 class Query(graphene.ObjectType):
+    # User queries
     me = graphene.Field(UserType)
+    user = graphene.Field(UserType, username=graphene.String(required=True))
+    user_profile = graphene.Field(UserProfileType, user_id=graphene.Int(required=True))
+    followers = graphene.List(UserType, user_id=graphene.Int(required=True))
+    following = graphene.List(UserType, user_id=graphene.Int(required=True))
+    
+    # Post queries
     posts = graphene.List(
         PostType,
         search=graphene.String(required=False),
@@ -55,18 +99,47 @@ class Query(graphene.ObjectType):
         skip=graphene.Int(required=False),
     )
     post = graphene.Field(PostType, id=graphene.Int(required=True))
+    
+    # Interaction queries
     interactions = graphene.List(
         InteractionType,
         post_id=graphene.Int(required=False),
         user_id=graphene.Int(required=False)
     )
 
+    # User query resolvers
     @login_required
     def resolve_me(self, info):
         """Get current authenticated user"""
         return info.context.user
 
+    def resolve_user(self, info, username):
+        """Get user by username"""
+        try:
+            return User.objects.get(username=username)
+        except User.DoesNotExist:
+            return None
+
+    def resolve_user_profile(self, info, user_id):
+        """Get user profile"""
+        try:
+            return UserProfile.objects.get(user_id=user_id)
+        except UserProfile.DoesNotExist:
+            return None
+
+    def resolve_followers(self, info, user_id):
+        """Get user's followers"""
+        follows = Follow.objects.filter(following_id=user_id).select_related('follower')
+        return [f.follower for f in follows]
+
+    def resolve_following(self, info, user_id):
+        """Get users that user is following"""
+        follows = Follow.objects.filter(follower_id=user_id).select_related('following')
+        return [f.following for f in follows]
+
+    # Post query resolvers
     def resolve_posts(self, info, search=None, first=None, skip=None, **kwargs):
+        """Get all posts with optional search and pagination"""
         qs = Post.objects.all().select_related("author").prefetch_related("comments").order_by('-created_at')
 
         if search:
@@ -83,12 +156,15 @@ class Query(graphene.ObjectType):
         return qs
 
     def resolve_post(self, info, id):
+        """Get single post by ID"""
         try:
             return Post.objects.select_related("author").prefetch_related("comments").get(pk=id)
         except Post.DoesNotExist:
             return None
 
+    # Interaction query resolvers
     def resolve_interactions(self, info, post_id=None, user_id=None, **kwargs):
+        """Get interactions with optional filters"""
         qs = Interaction.objects.all().select_related("user", "post")
         if post_id:
             qs = qs.filter(post_id=post_id)
@@ -97,7 +173,10 @@ class Query(graphene.ObjectType):
         return qs
 
 
-# Auth Mutations
+# ============================================
+# Authentication Mutations
+# ============================================
+
 class RegisterUser(graphene.Mutation):
     class Arguments:
         username = graphene.String(required=True)
@@ -160,7 +239,6 @@ class RegisterUser(graphene.Mutation):
             )
 
 
-# Custom login mutation with refresh token
 class ObtainJSONWebTokenWithRefresh(graphql_jwt.JSONWebTokenMutation):
     """Custom token mutation that includes refresh token"""
     user = graphene.Field(UserType)
@@ -174,7 +252,10 @@ class ObtainJSONWebTokenWithRefresh(graphql_jwt.JSONWebTokenMutation):
         )
 
 
+# ============================================
 # Post Mutations
+# ============================================
+
 class CreatePost(graphene.Mutation):
     class Arguments:
         content = graphene.String(required=True)
@@ -297,11 +378,124 @@ class SharePost(graphene.Mutation):
             return SharePost(post=None, success=False, errors=[str(e)])
 
 
-# All Mutations
+# ============================================
+# Profile Mutations
+# ============================================
+
+class UpdateProfile(graphene.Mutation):
+    class Arguments:
+        bio = graphene.String()
+        date_of_birth = graphene.Date()
+        location = graphene.String()
+        profile_picture = graphene.String()
+
+    success = graphene.Boolean()
+    errors = graphene.List(graphene.String)
+    profile = graphene.Field(UserProfileType)
+
+    @classmethod
+    @login_required
+    def mutate(cls, root, info, **kwargs):
+        user = info.context.user
+        profile, created = UserProfile.objects.get_or_create(user=user)
+
+        for key, value in kwargs.items():
+            if value is not None:
+                setattr(profile, key, value)
+
+        profile.save()
+        return UpdateProfile(success=True, profile=profile, errors=None)
+
+
+# ============================================
+# Follow Mutations
+# ============================================
+
+class FollowUser(graphene.Mutation):
+    class Arguments:
+        user_id = graphene.Int(required=True)
+
+    success = graphene.Boolean()
+    errors = graphene.List(graphene.String)
+    is_following = graphene.Boolean()
+
+    @classmethod
+    @login_required
+    def mutate(cls, root, info, user_id):
+        follower = info.context.user
+
+        if follower.id == user_id:
+            return FollowUser(success=False, errors=['Cannot follow yourself'], is_following=False)
+
+        try:
+            following = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return FollowUser(success=False, errors=['User not found'], is_following=False)
+
+        follow, created = Follow.objects.get_or_create(
+            follower=follower,
+            following=following
+        )
+
+        if created:
+            # Update counts
+            follower_profile, _ = UserProfile.objects.get_or_create(user=follower)
+            following_profile, _ = UserProfile.objects.get_or_create(user=following)
+
+            follower_profile.following_count += 1
+            following_profile.followers_count += 1
+
+            follower_profile.save()
+            following_profile.save()
+
+        return FollowUser(success=True, is_following=True, errors=None)
+
+
+class UnfollowUser(graphene.Mutation):
+    class Arguments:
+        user_id = graphene.Int(required=True)
+
+    success = graphene.Boolean()
+    errors = graphene.List(graphene.String)
+    is_following = graphene.Boolean()
+
+    @classmethod
+    @login_required
+    def mutate(cls, root, info, user_id):
+        follower = info.context.user
+
+        try:
+            following = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return UnfollowUser(success=False, errors=['User not found'], is_following=True)
+
+        deleted = Follow.objects.filter(
+            follower=follower,
+            following=following
+        ).delete()[0]
+
+        if deleted:
+            # Update counts
+            follower_profile = UserProfile.objects.get(user=follower)
+            following_profile = UserProfile.objects.get(user=following)
+
+            follower_profile.following_count = max(0, follower_profile.following_count - 1)
+            following_profile.followers_count = max(0, following_profile.followers_count - 1)
+
+            follower_profile.save()
+            following_profile.save()
+
+        return UnfollowUser(success=True, is_following=False, errors=None)
+
+
+# ============================================
+# Mutation Class - Register all mutations here
+# ============================================
+
 class Mutation(graphene.ObjectType):
     # Authentication
     register = RegisterUser.Field()
-    token_auth = ObtainJSONWebTokenWithRefresh.Field()  # Updated to include refresh token
+    token_auth = ObtainJSONWebTokenWithRefresh.Field()
     verify_token = graphql_jwt.Verify.Field()
     refresh_token = graphql_jwt.Refresh.Field()
     revoke_token = graphql_jwt.Revoke.Field()
@@ -311,7 +505,17 @@ class Mutation(graphene.ObjectType):
     create_comment = CreateComment.Field()
     toggle_like = ToggleLike.Field()
     share_post = SharePost.Field()
+    
+    # Profile actions
+    update_profile = UpdateProfile.Field()
+    
+    # Follow actions
+    follow_user = FollowUser.Field()
+    unfollow_user = UnfollowUser.Field()
 
 
-# Schema
+# ============================================
+# Schema Export
+# ============================================
+
 schema = graphene.Schema(query=Query, mutation=Mutation)

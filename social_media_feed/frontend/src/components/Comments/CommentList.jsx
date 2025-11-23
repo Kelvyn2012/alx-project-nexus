@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { formatRelativeTime } from '../../utils/helpers';
 
 const CommentList = ({ comments }) => {
@@ -21,9 +22,12 @@ const CommentList = ({ comments }) => {
 
           <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-semibold text-secondary">
+              <Link
+                to={`/user/${comment.author.username}`}
+                className="text-sm font-semibold text-secondary hover:text-primary transition-colors"
+              >
                 {comment.author.username}
-              </span>
+              </Link>
               <span className="text-xs text-gray-500">
                 {formatRelativeTime(comment.createdAt)}
               </span>

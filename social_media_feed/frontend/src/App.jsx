@@ -11,6 +11,7 @@ import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import Home from './pages/Home';
 import ProfilePage from './pages/ProfilePage';
+import UserProfile from './pages/UserProfile';
 
 function App() {
   return (
@@ -34,6 +35,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/user/:username"
+                element={
+                  <ProtectedRoute>
+                    <UserProfile />
                   </ProtectedRoute>
                 }
               />

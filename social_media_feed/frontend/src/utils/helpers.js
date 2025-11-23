@@ -66,15 +66,78 @@ export const isValidEmail = (email) => {
 
 /**
  * Extract error message from GraphQL error
+ * Sanitizes technical errors to show user-friendly messages
  * @param {object} error - GraphQL error object
- * @returns {string} Error message
+ * @returns {string} User-friendly error message
  */
 export const getErrorMessage = (error) => {
   if (error.graphQLErrors && error.graphQLErrors.length > 0) {
-    return error.graphQLErrors[0].message;
+    const errorMsg = error.graphQLErrors[0].message;
+
+    // Hide SQL/database errors from users
+    if (errorMsg.includes('relation') ||
+        errorMsg.includes('SQL') ||
+        errorMsg.includes('database') ||
+        errorMsg.includes('does not exist') ||
+        errorMsg.includes('syntax error') ||
+        errorMsg.includes('constraint')) {
+      return 'A server error occurred. Please try again later or contact support.';
+    }
+
+    // Hide authentication backend errors
+    if (errorMsg.includes('JWT') ||
+        errorMsg.includes('token') ||
+        errorMsg.includes('authentication')) {
+      return 'Authentication failed. Please login again.';
+    }
+
+    // Return safe error messages
+    return errorMsg;
   }
+
   if (error.networkError) {
-    return 'Network error. Please check your connection.';
+    return 'Unable to connect to the server. Please check your internet connection.';
   }
-  return error.message || 'An unexpected error occurred.';
+
+  return 'Something went wrong. Please try again.';
+};
+
+/**
+ * Get initials from username for avatar
+ * @param {string} username - Username
+ * @returns {string} Initials (max 2 characters)
+ */
+export const getInitials = (username) => {
+  if (!username) return '?';
+  const parts = username.trim().split(/\s+/);
+  if (parts.length > 1) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return username.substring(0, 2).toUpperCase();
+};
+
+/**
+ * Generate a color based on username for avatar background
+ * @param {string} username - Username
+ * @returns {string} Hex color code
+ */
+export const getAvatarColor = (username) => {
+  if (!username) return '#1DA1F2';
+
+  const colors = [
+    '#1DA1F2', // Blue
+    '#17BF63', // Green
+    '#E0245E', // Pink
+    '#794BC4', // Purple
+    '#F45D22', // Orange
+    '#1C9CEA', // Light Blue
+    '#8B5CF6', // Violet
+    '#10B981', // Emerald
+  ];
+
+  const hash = username.split('').reduce((acc, char) => {
+    return char.charCodeAt(0) + ((acc << 5) - acc);
+  }, 0);
+
+  return colors[Math.abs(hash) % colors.length];
 };

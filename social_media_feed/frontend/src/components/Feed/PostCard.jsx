@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
+import { Link } from 'react-router-dom';
 import { TOGGLE_LIKE, SHARE_POST } from '../../graphql/mutations';
 import { GET_POSTS } from '../../graphql/queries';
 import { formatRelativeTime, formatNumber } from '../../utils/helpers';
@@ -73,9 +74,12 @@ const PostCard = ({ post }) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-semibold text-secondary">
+              <Link
+                to={`/user/${post.author.username}`}
+                className="font-semibold text-secondary hover:text-primary transition-colors"
+              >
                 {post.author.username}
-              </p>
+              </Link>
               <p className="text-sm text-gray-500">
                 {formatRelativeTime(post.createdAt)}
               </p>

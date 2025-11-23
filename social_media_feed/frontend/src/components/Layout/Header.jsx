@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import ProfilePicture from '../Profile/ProfilePicture';
 
 const Header = ({ onSearch }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -73,11 +74,7 @@ const Header = ({ onSearch }) => {
               to="/profile"
               className="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
             >
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold text-sm">
-                  {user?.username?.charAt(0).toUpperCase()}
-                </span>
-              </div>
+              <ProfilePicture username={user?.username} size="small" />
               <span className="text-sm font-medium text-secondary hidden sm:block">
                 {user?.username}
               </span>
