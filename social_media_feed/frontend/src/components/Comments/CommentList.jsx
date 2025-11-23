@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { formatRelativeTime } from '../../utils/helpers';
+import ProfilePicture from '../Profile/ProfilePicture';
 
 const CommentList = ({ comments }) => {
   if (!comments || comments.length === 0) {
@@ -14,11 +15,11 @@ const CommentList = ({ comments }) => {
     <div className="space-y-3 mt-3">
       {comments.map((comment) => (
         <div key={comment.id} className="flex items-start space-x-2">
-          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-semibold text-xs">
-              {comment.author.username.charAt(0).toUpperCase()}
-            </span>
-          </div>
+          <ProfilePicture
+            username={comment.author.username}
+            profilePicture={comment.author.profile?.profilePicture}
+            size="small"
+          />
 
           <div className="flex-1 bg-gray-50 rounded-lg px-3 py-2">
             <div className="flex items-center justify-between mb-1">

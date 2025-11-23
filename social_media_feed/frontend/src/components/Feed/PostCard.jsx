@@ -6,6 +6,7 @@ import { GET_POSTS } from '../../graphql/queries';
 import { formatRelativeTime, formatNumber } from '../../utils/helpers';
 import CommentList from '../Comments/CommentList';
 import CommentForm from '../Comments/CommentForm';
+import ProfilePicture from '../Profile/ProfilePicture';
 import { toast } from 'react-toastify';
 import { getErrorMessage } from '../../utils/helpers';
 
@@ -65,11 +66,11 @@ const PostCard = ({ post }) => {
     <div className="card p-4 mb-4 hover:shadow-md transition-shadow">
       {/* Post Header */}
       <div className="flex items-start space-x-3 mb-3">
-        <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-semibold text-sm">
-            {post.author.username.charAt(0).toUpperCase()}
-          </span>
-        </div>
+        <ProfilePicture
+          username={post.author.username}
+          profilePicture={post.author.profile?.profilePicture}
+          size="medium"
+        />
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
