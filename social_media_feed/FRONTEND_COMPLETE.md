@@ -1,4 +1,4 @@
-# ✅ Social Media Feed Frontend - COMPLETE
+# ✅ Social-Media Feed Frontend - COMPLETE
 
 ## 🎉 Project Status: READY TO USE
 
