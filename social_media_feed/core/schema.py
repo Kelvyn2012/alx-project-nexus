@@ -5,7 +5,12 @@ from django.db.models import Q
 from graphql_jwt.decorators import login_required
 import graphql_jwt
 from graphql_jwt.shortcuts import get_token, create_refresh_token
-from .models import Post, Comment, Interaction, UserProfile, Follow
+from .models import Post, Comment, Interaction, UserProfile, Follow, PasswordResetToken
+from django.core.mail import send_mail
+from django.conf import settings
+from google.oauth2 import id_token
+from google.auth.transport import requests
+import os
 
 User = get_user_model()
 
@@ -250,6 +255,204 @@ class ObtainJSONWebTokenWithRefresh(graphql_jwt.JSONWebTokenMutation):
             user=info.context.user,
             refresh_token=create_refresh_token(info.context.user)
         )
+
+
+class RequestPasswordReset(graphene.Mutation):
+    class Arguments:
+        email = graphene.String(required=True)
+
+    success = graphene.Boolean()
+    message = graphene.String()
+    errors = graphene.List(graphene.String)
+
+    @classmethod
+    def mutate(cls, root, info, email):
+        try:
+            user = User.objects.get(email=email)
+
+            # Create password reset token
+            reset_token = PasswordResetToken.objects.create(user=user)
+
+            # Send email (in production, use a proper email template)
+            reset_link = f"{os.getenv('FRONTEND_URL', 'http://localhost:5173')}/reset-password?token={reset_token.token}"
+
+            send_mail(
+                subject='Password Reset Request',
+                message=f'Click the link below to reset your password:\n\n{reset_link}\n\nThis link will expire in 24 hours.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+
+            return RequestPasswordReset(
+                success=True,
+                message="Password reset email sent successfully",
+                errors=None
+            )
+        except User.DoesNotExist:
+            # For security, don't reveal if email exists
+            return RequestPasswordReset(
+                success=True,
+                message="If an account with that email exists, a password reset link has been sent",
+                errors=None
+            )
+        except Exception as e:
+            return RequestPasswordReset(
+                success=False,
+                message="Failed to send password reset email",
+                errors=[str(e)]
+            )
+
+
+class ResetPassword(graphene.Mutation):
+    class Arguments:
+        token = graphene.String(required=True)
+        new_password = graphene.String(required=True)
+
+    success = graphene.Boolean()
+    message = graphene.String()
+    errors = graphene.List(graphene.String)
+
+    @classmethod
+    def mutate(cls, root, info, token, new_password):
+        try:
+            reset_token = PasswordResetToken.objects.get(token=token)
+
+            if not reset_token.is_valid():
+                return ResetPassword(
+                    success=False,
+                    message="Invalid or expired token",
+                    errors=["Token is invalid or has expired"]
+                )
+
+            # Reset password
+            user = reset_token.user
+            user.set_password(new_password)
+            user.save()
+
+            # Mark token as used
+            reset_token.is_used = True
+            reset_token.save()
+
+            return ResetPassword(
+                success=True,
+                message="Password reset successful",
+                errors=None
+            )
+        except PasswordResetToken.DoesNotExist:
+            return ResetPassword(
+                success=False,
+                message="Invalid token",
+                errors=["Invalid token"]
+            )
+        except Exception as e:
+            return ResetPassword(
+                success=False,
+                message="Failed to reset password",
+                errors=[str(e)]
+            )
+
+
+class GoogleSignIn(graphene.Mutation):
+    class Arguments:
+        token = graphene.String(required=True)
+
+    user = graphene.Field(UserType)
+    token = graphene.String()
+    refresh_token = graphene.String()
+    success = graphene.Boolean()
+    errors = graphene.List(graphene.String)
+
+    @classmethod
+    def mutate(cls, root, info, token):
+        try:
+            # Verify the Google token
+            client_id = os.getenv('GOOGLE_CLIENT_ID')
+            if not client_id:
+                return GoogleSignIn(
+                    user=None,
+                    token=None,
+                    refresh_token=None,
+                    success=False,
+                    errors=["Google OAuth is not configured"]
+                )
+
+            idinfo = id_token.verify_oauth2_token(
+                token,
+                requests.Request(),
+                client_id
+            )
+
+            # Get user info from Google
+            email = idinfo.get('email')
+            given_name = idinfo.get('given_name', '')
+            family_name = idinfo.get('family_name', '')
+            picture = idinfo.get('picture', '')
+
+            if not email:
+                return GoogleSignIn(
+                    user=None,
+                    token=None,
+                    refresh_token=None,
+                    success=False,
+                    errors=["Email not provided by Google"]
+                )
+
+            # Check if user exists
+            user = User.objects.filter(email=email).first()
+
+            if not user:
+                # Create new user
+                username = email.split('@')[0]
+                base_username = username
+                counter = 1
+
+                # Ensure unique username
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}{counter}"
+                    counter += 1
+
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    first_name=given_name,
+                    last_name=family_name
+                )
+
+                # Create profile with Google picture
+                UserProfile.objects.create(
+                    user=user,
+                    profile_picture=picture
+                )
+
+            # Generate JWT tokens
+            jwt_token = get_token(user)
+            refresh = create_refresh_token(user)
+
+            return GoogleSignIn(
+                user=user,
+                token=jwt_token,
+                refresh_token=refresh,
+                success=True,
+                errors=None
+            )
+
+        except ValueError as e:
+            return GoogleSignIn(
+                user=None,
+                token=None,
+                refresh_token=None,
+                success=False,
+                errors=["Invalid Google token"]
+            )
+        except Exception as e:
+            return GoogleSignIn(
+                user=None,
+                token=None,
+                refresh_token=None,
+                success=False,
+                errors=[str(e)]
+            )
 
 
 # ============================================
@@ -499,16 +702,23 @@ class Mutation(graphene.ObjectType):
     verify_token = graphql_jwt.Verify.Field()
     refresh_token = graphql_jwt.Refresh.Field()
     revoke_token = graphql_jwt.Revoke.Field()
-    
+
+    # Password reset
+    request_password_reset = RequestPasswordReset.Field()
+    reset_password = ResetPassword.Field()
+
+    # Google OAuth
+    google_sign_in = GoogleSignIn.Field()
+
     # Post actions
     create_post = CreatePost.Field()
     create_comment = CreateComment.Field()
     toggle_like = ToggleLike.Field()
     share_post = SharePost.Field()
-    
+
     # Profile actions
     update_profile = UpdateProfile.Field()
-    
+
     # Follow actions
     follow_user = FollowUser.Field()
     unfollow_user = UnfollowUser.Field()

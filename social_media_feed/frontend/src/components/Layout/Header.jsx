@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import ProfilePicture from '../Profile/ProfilePicture';
+import ThemeToggle from '../Common/ThemeToggle';
 
 const Header = ({ onSearch }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,7 +21,7 @@ const Header = ({ onSearch }) => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 shadow-sm transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -35,7 +36,7 @@ const Header = ({ onSearch }) => {
                 <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
               </svg>
             </div>
-            <span className="text-xl font-bold text-secondary hidden sm:block">
+            <span className="text-xl font-bold text-secondary dark:text-white hidden sm:block">
               Social Feed
             </span>
           </Link>
@@ -49,10 +50,10 @@ const Header = ({ onSearch }) => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search posts..."
-                  className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
                 />
                 <svg
-                  className="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
+                  className="absolute left-3 top-2.5 w-5 h-5 text-gray-400 dark:text-gray-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -70,19 +71,21 @@ const Header = ({ onSearch }) => {
 
           {/* User Menu */}
           <div className="flex items-center space-x-4">
+            <ThemeToggle />
+
             <Link
               to="/profile"
-              className="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors"
+              className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-colors"
             >
               <ProfilePicture username={user?.username} size="small" />
-              <span className="text-sm font-medium text-secondary hidden sm:block">
+              <span className="text-sm font-medium text-secondary dark:text-gray-200 hidden sm:block">
                 {user?.username}
               </span>
             </Link>
 
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
               Logout
             </button>

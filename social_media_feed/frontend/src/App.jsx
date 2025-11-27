@@ -5,10 +5,13 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import client from './utils/apolloClient';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/Common/ProtectedRoute';
 
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
+import ForgotPassword from './components/Auth/ForgotPassword';
+import ResetPassword from './components/Auth/ResetPassword';
 import Home from './pages/Home';
 import ProfilePage from './pages/ProfilePage';
 import UserProfile from './pages/UserProfile';
@@ -17,11 +20,14 @@ function App() {
   return (
     <ApolloProvider client={client}>
       <Router>
-        <AuthProvider>
-          <div className="App">
+        <ThemeProvider>
+          <AuthProvider>
+            <div className="App bg-white dark:bg-gray-900 min-h-screen transition-colors">
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route
                 path="/"
                 element={
@@ -61,8 +67,9 @@ function App() {
               pauseOnHover
               theme="light"
             />
-          </div>
-        </AuthProvider>
+            </div>
+          </AuthProvider>
+        </ThemeProvider>
       </Router>
     </ApolloProvider>
   );

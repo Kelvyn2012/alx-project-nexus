@@ -13,7 +13,7 @@ const Input = ({
   return (
     <div className={`mb-4 ${className}`}>
       {label && (
-        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor={name} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -27,9 +27,9 @@ const Input = ({
         placeholder={placeholder}
         required={required}
         disabled={disabled}
-        className={`input-field ${error ? 'border-red-500 focus:ring-red-500' : ''}`}
+        className={`input-field ${error ? 'border-red-500 dark:border-red-500 focus:ring-red-500' : ''}`}
       />
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{error}</p>}
     </div>
   );
 };

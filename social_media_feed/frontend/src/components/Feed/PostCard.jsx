@@ -77,11 +77,11 @@ const PostCard = ({ post }) => {
             <div>
               <Link
                 to={`/user/${post.author.username}`}
-                className="font-semibold text-secondary hover:text-primary transition-colors"
+                className="font-semibold text-secondary dark:text-gray-100 hover:text-primary transition-colors"
               >
                 {post.author.username}
               </Link>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {formatRelativeTime(post.createdAt)}
               </p>
             </div>
@@ -91,18 +91,18 @@ const PostCard = ({ post }) => {
 
       {/* Post Content */}
       <div className="mb-3">
-        <p className="text-secondary whitespace-pre-wrap break-words">
+        <p className="text-secondary dark:text-gray-200 whitespace-pre-wrap break-words">
           {post.content}
         </p>
       </div>
 
       {/* Post Actions */}
-      <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+      <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
         <button
           onClick={handleLike}
           disabled={likeLoading}
-          className={`flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors ${
-            isLiked ? 'text-like' : 'text-gray-600'
+          className={`flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ${
+            isLiked ? 'text-like' : 'text-gray-600 dark:text-gray-400'
           }`}
         >
           <svg
@@ -125,7 +125,7 @@ const PostCard = ({ post }) => {
 
         <button
           onClick={handleToggleComments}
-          className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors text-gray-600"
+          className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-gray-600 dark:text-gray-400"
         >
           <svg
             className="w-5 h-5"
@@ -148,7 +148,7 @@ const PostCard = ({ post }) => {
         <button
           onClick={handleShare}
           disabled={shareLoading}
-          className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-green-50 transition-colors text-gray-600"
+          className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors text-gray-600 dark:text-gray-400"
         >
           <svg
             className="w-5 h-5"
@@ -171,7 +171,7 @@ const PostCard = ({ post }) => {
 
       {/* Comments Section */}
       {showComments && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <CommentList comments={post.comments} />
           <CommentForm postId={post.id} />
         </div>

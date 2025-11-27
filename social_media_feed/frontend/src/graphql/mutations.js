@@ -101,3 +101,42 @@ export const CREATE_COMMENT = gql`
     }
   }
 `;
+
+// Request password reset
+export const REQUEST_PASSWORD_RESET = gql`
+  mutation RequestPasswordReset($email: String!) {
+    requestPasswordReset(email: $email) {
+      success
+      message
+      errors
+    }
+  }
+`;
+
+// Reset password with token
+export const RESET_PASSWORD = gql`
+  mutation ResetPassword($token: String!, $newPassword: String!) {
+    resetPassword(token: $token, newPassword: $newPassword) {
+      success
+      message
+      errors
+    }
+  }
+`;
+
+// Google Sign In
+export const GOOGLE_SIGN_IN = gql`
+  mutation GoogleSignIn($token: String!) {
+    googleSignIn(token: $token) {
+      user {
+        id
+        username
+        email
+      }
+      token
+      refreshToken
+      success
+      errors
+    }
+  }
+`;
