@@ -22,7 +22,7 @@ function App() {
       <Router>
         <ThemeProvider>
           <AuthProvider>
-            <div className="App bg-white dark:bg-gray-900 min-h-screen transition-colors">
+            <div className="App bg-white dark:bg-gradient-dark min-h-screen transition-colors duration-300">
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -65,7 +65,7 @@ function App() {
               pauseOnFocusLoss
               draggable
               pauseOnHover
-              theme="light"
+              theme="dark"
             />
             </div>
           </AuthProvider>

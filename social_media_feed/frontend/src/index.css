@@ -4,46 +4,70 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 dark:bg-gray-900 text-secondary dark:text-gray-100 transition-colors;
+    @apply bg-gray-50 dark:bg-dark-900 text-secondary dark:text-gray-100 transition-colors duration-300;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md;
   }
 
   .btn-secondary {
-    @apply bg-gray-200 dark:bg-gray-700 text-secondary dark:text-gray-200 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200;
+    @apply bg-gray-200 dark:bg-dark-800 text-secondary dark:text-gray-200 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-dark-700 active:scale-95 transition-all duration-200 shadow-sm hover:shadow-md;
   }
 
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors;
+    @apply w-full px-4 py-2 border border-gray-300 dark:border-dark-700 bg-white dark:bg-dark-850 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 dark:placeholder:text-dark-400;
   }
 
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors;
+    @apply bg-white dark:bg-dark-850 rounded-xl shadow-sm dark:shadow-dark-md border border-gray-200 dark:border-dark-700 transition-all duration-300 backdrop-blur-sm;
   }
 
   .icon-button {
-    @apply p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 cursor-pointer;
+    @apply p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-800 active:scale-95 transition-all duration-200 cursor-pointer;
   }
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100 dark:bg-gray-800;
+  @apply bg-gray-100 dark:bg-dark-900;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-400 dark:bg-gray-600;
-  border-radius: 4px;
+  @apply bg-gray-400 dark:bg-dark-700;
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500 dark:bg-gray-500;
+  @apply bg-gray-500 dark:bg-dark-600;
+}
+
+/* Dark mode enhancements */
+.dark {
+  color-scheme: dark;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Glass morphism effect for dark mode cards */
+.dark .card {
+  background: rgba(30, 33, 57, 0.8);
+  backdrop-filter: blur(12px);
+}
+
+/* Better focus states in dark mode */
+.dark *:focus-visible {
+  outline: 2px solid rgba(29, 161, 242, 0.5);
+  outline-offset: 2px;
 }

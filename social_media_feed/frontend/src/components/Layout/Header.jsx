@@ -21,12 +21,12 @@ const Header = ({ onSearch }) => {
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 shadow-sm transition-colors">
+    <header className="bg-white/80 dark:bg-dark-850/90 backdrop-blur-md border-b border-gray-200 dark:border-dark-700 sticky top-0 z-10 shadow-sm dark:shadow-dark-lg transition-all duration-300">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+          <Link to="/" className="flex items-center space-x-2 group">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 dark:from-blue-500 dark:to-primary rounded-full flex items-center justify-center shadow-md dark:shadow-dark-md group-hover:scale-110 transition-transform duration-200">
               <svg
                 className="w-6 h-6 text-white"
                 fill="currentColor"
@@ -36,7 +36,7 @@ const Header = ({ onSearch }) => {
                 <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
               </svg>
             </div>
-            <span className="text-xl font-bold text-secondary dark:text-white hidden sm:block">
+            <span className="text-xl font-bold text-secondary dark:text-white hidden sm:block group-hover:text-primary dark:group-hover:text-blue-400 transition-colors">
               Social Feed
             </span>
           </Link>
@@ -50,10 +50,10 @@ const Header = ({ onSearch }) => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search posts..."
-                  className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                  className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 dark:border-dark-700 bg-gray-50 dark:bg-dark-800 text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 dark:placeholder:text-dark-400 hover:bg-white dark:hover:bg-dark-850"
                 />
                 <svg
-                  className="absolute left-3 top-2.5 w-5 h-5 text-gray-400 dark:text-gray-500"
+                  className="absolute left-3 top-2.5 w-5 h-5 text-gray-400 dark:text-dark-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -75,7 +75,7 @@ const Header = ({ onSearch }) => {
 
             <Link
               to="/profile"
-              className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-colors"
+              className="flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-dark-800 px-3 py-2 rounded-lg transition-all duration-200 active:scale-95"
             >
               <ProfilePicture username={user?.username} size="small" />
               <span className="text-sm font-medium text-secondary dark:text-gray-200 hidden sm:block">
@@ -85,7 +85,7 @@ const Header = ({ onSearch }) => {
 
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-all duration-200 active:scale-95"
             >
               Logout
             </button>
