@@ -4,50 +4,51 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 dark:bg-dark-900 text-secondary dark:text-gray-100 transition-colors duration-300;
+    @apply bg-gray-50 dark:bg-gradient-to-br dark:from-dark-900 dark:via-dark-850 dark:to-dark-900 text-secondary dark:text-gray-100 transition-colors duration-300;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md;
+    @apply bg-gradient-to-r from-primary to-blue-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40;
   }
 
   .btn-secondary {
-    @apply bg-gray-200 dark:bg-dark-800 text-secondary dark:text-gray-200 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-dark-700 active:scale-95 transition-all duration-200 shadow-sm hover:shadow-md;
+    @apply bg-gray-200 dark:bg-gradient-to-br dark:from-dark-800 dark:to-dark-850 text-secondary dark:text-gray-200 px-6 py-2.5 rounded-xl font-semibold hover:bg-gray-300 dark:hover:from-dark-700 dark:hover:to-dark-800 active:scale-95 transition-all duration-200 shadow-md hover:shadow-lg dark:shadow-dark-md dark:hover:shadow-dark-lg;
   }
 
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 dark:border-dark-700 bg-white dark:bg-dark-850 text-gray-900 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 dark:placeholder:text-dark-400;
+    @apply w-full px-4 py-3 border-2 border-gray-300 dark:border-dark-700 bg-white dark:bg-gradient-to-br dark:from-dark-850 dark:to-dark-900 text-gray-900 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 dark:focus:ring-blue-500/50 focus:border-primary dark:focus:border-blue-500 transition-all duration-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-sm dark:shadow-dark-sm;
   }
 
   .card {
-    @apply bg-white dark:bg-dark-850 rounded-xl shadow-sm dark:shadow-dark-md border border-gray-200 dark:border-dark-700 transition-all duration-300 backdrop-blur-sm;
+    @apply bg-white dark:bg-gradient-to-br dark:from-dark-850 dark:via-dark-850 dark:to-dark-900 rounded-2xl shadow-md dark:shadow-dark-lg border border-gray-200 dark:border-dark-700/50 transition-all duration-300 backdrop-blur-sm;
   }
 
   .icon-button {
-    @apply p-2 rounded-full hover:bg-gray-100 dark:hover:bg-dark-800 active:scale-95 transition-all duration-200 cursor-pointer;
+    @apply p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-dark-800/60 active:scale-95 transition-all duration-200 cursor-pointer hover:shadow-md dark:hover:shadow-dark-md;
   }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar with enhanced dark mode */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 12px;
 }
 
 ::-webkit-scrollbar-track {
   @apply bg-gray-100 dark:bg-dark-900;
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-400 dark:bg-dark-700;
-  border-radius: 5px;
-  border: 2px solid transparent;
+  @apply bg-gray-400 dark:bg-gradient-to-b dark:from-dark-700 dark:to-dark-800;
+  border-radius: 10px;
+  border: 3px solid transparent;
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500 dark:bg-dark-600;
+  @apply bg-gray-500 dark:bg-gradient-to-b dark:from-dark-600 dark:to-dark-700;
 }
 
 /* Dark mode enhancements */
@@ -56,18 +57,137 @@
 }
 
 /* Smooth transitions for all interactive elements */
-* {
-  @apply transition-colors duration-200;
+button, a, input, textarea {
+  @apply transition-all duration-200;
 }
 
-/* Glass morphism effect for dark mode cards */
+/* Enhanced glass morphism effect for dark mode cards */
 .dark .card {
-  background: rgba(30, 33, 57, 0.8);
-  backdrop-filter: blur(12px);
+  background: linear-gradient(135deg, rgba(30, 33, 57, 0.9) 0%, rgba(22, 24, 43, 0.85) 100%);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Hover effect for cards in dark mode */
+.dark .card:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
 }
 
 /* Better focus states in dark mode */
 .dark *:focus-visible {
-  outline: 2px solid rgba(29, 161, 242, 0.5);
+  outline: 2px solid rgba(59, 130, 246, 0.6);
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Enhanced text gradients for dark mode */
+.dark .text-gradient {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animated shimmer effect for loading states in dark mode */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.dark .skeleton {
+  background: linear-gradient(90deg, #1e2139 0%, #2a2d4a 50%, #1e2139 100%);
+  background-size: 2000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Enhanced button hover effects in dark mode */
+.dark button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.dark button:not(:disabled):active {
+  transform: translateY(0);
+}
+
+/* Glow effects for interactive elements in dark mode */
+.dark .glow-on-hover:hover {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4),
+              0 0 40px rgba(59, 130, 246, 0.2),
+              0 0 60px rgba(59, 130, 246, 0.1);
+}
+
+/* Better text hierarchy in dark mode */
+.dark h1, .dark h2, .dark h3 {
+  @apply text-white;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced modal backdrop in dark mode */
+.dark .modal-backdrop {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+}
+
+/* Improved border accents for dark mode */
+.dark .border-accent {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
+}
+
+/* Subtle gradient overlays for sections in dark mode */
+.dark .section-gradient {
+  background: linear-gradient(180deg, rgba(22, 24, 43, 0) 0%, rgba(22, 24, 43, 0.8) 100%);
+}
+
+/* Enhanced selection colors in dark mode */
+.dark ::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: #ffffff;
+}
+
+/* Improved link styles in dark mode */
+.dark a:not(.btn-primary):not(.btn-secondary) {
+  @apply text-blue-400 hover:text-blue-300;
+  text-decoration: none;
+  position: relative;
+}
+
+.dark a:not(.btn-primary):not(.btn-secondary):hover {
+  text-shadow: 0 0 8px rgba(96, 165, 250, 0.5);
+}
+
+/* Enhanced divider styles for dark mode */
+.dark hr, .dark .divider {
+  @apply border-dark-700;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Subtle animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Dark mode code blocks */
+.dark pre, .dark code {
+  @apply bg-dark-900 text-gray-300;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
 }

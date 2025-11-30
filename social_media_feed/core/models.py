@@ -55,10 +55,26 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Quote post/retweet functionality
+    quoted_post = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        related_name='quotes',
+        null=True,
+        blank=True,
+        help_text='If this is a quote post, reference to the original post'
+    )
+    is_repost = models.BooleanField(
+        default=False,
+        help_text='True if this is a simple repost without additional content'
+    )
+
     # For scalability: precomputed counters
     likes_count = models.PositiveIntegerField(default=0)
     comments_count = models.PositiveIntegerField(default=0)
     shares_count = models.PositiveIntegerField(default=0)
+    quotes_count = models.PositiveIntegerField(default=0)
+    reposts_count = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ['-created_at']

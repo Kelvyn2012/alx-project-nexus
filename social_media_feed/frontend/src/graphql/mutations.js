@@ -34,8 +34,8 @@ export const LOGIN = gql`
 
 // Create a new post
 export const CREATE_POST = gql`
-  mutation CreatePost($content: String!) {
-    createPost(content: $content) {
+  mutation CreatePost($content: String!, $quotedPostId: Int) {
+    createPost(content: $content, quotedPostId: $quotedPostId) {
       post {
         id
         content
@@ -47,6 +47,18 @@ export const CREATE_POST = gql`
         likesCount
         commentsCount
         sharesCount
+        quotesCount
+        repostsCount
+        isRepost
+        quotedPost {
+          id
+          content
+          author {
+            id
+            username
+          }
+          createdAt
+        }
       }
       success
       errors
@@ -76,6 +88,20 @@ export const SHARE_POST = gql`
       post {
         id
         sharesCount
+      }
+      success
+      errors
+    }
+  }
+`;
+
+// Repost a post
+export const REPOST_POST = gql`
+  mutation RepostPost($postId: Int!) {
+    repostPost(postId: $postId) {
+      post {
+        id
+        repostsCount
       }
       success
       errors

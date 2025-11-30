@@ -57,6 +57,8 @@ class FollowType(DjangoObjectType):
 
 
 class PostType(DjangoObjectType):
+    quoted_post = graphene.Field(lambda: PostType)
+
     class Meta:
         model = Post
         fields = (
@@ -68,8 +70,15 @@ class PostType(DjangoObjectType):
             "likes_count",
             "comments_count",
             "shares_count",
+            "quotes_count",
+            "reposts_count",
             "comments",
+            "quoted_post",
+            "is_repost",
         )
+
+    def resolve_quoted_post(self, info):
+        return self.quoted_post
 
 
 class CommentType(DjangoObjectType):
@@ -462,6 +471,7 @@ class GoogleSignIn(graphene.Mutation):
 class CreatePost(graphene.Mutation):
     class Arguments:
         content = graphene.String(required=True)
+        quoted_post_id = graphene.Int(required=False)
 
     post = graphene.Field(PostType)
     success = graphene.Boolean()
@@ -469,11 +479,26 @@ class CreatePost(graphene.Mutation):
 
     @classmethod
     @login_required
-    def mutate(cls, root, info, content):
+    def mutate(cls, root, info, content, quoted_post_id=None):
         user = info.context.user
 
         try:
-            post = Post.objects.create(author=user, content=content)
+            quoted_post = None
+            if quoted_post_id:
+                try:
+                    quoted_post = Post.objects.get(pk=quoted_post_id)
+                    # Increment quotes count on the quoted post
+                    quoted_post.quotes_count += 1
+                    quoted_post.save(update_fields=["quotes_count"])
+                except Post.DoesNotExist:
+                    return CreatePost(post=None, success=False, errors=["Quoted post not found"])
+
+            post = Post.objects.create(
+                author=user,
+                content=content,
+                quoted_post=quoted_post,
+                is_repost=False
+            )
             return CreatePost(post=post, success=True, errors=None)
         except Exception as e:
             return CreatePost(post=None, success=False, errors=[str(e)])
@@ -579,6 +604,55 @@ class SharePost(graphene.Mutation):
             return SharePost(post=None, success=False, errors=["Post not found"])
         except Exception as e:
             return SharePost(post=None, success=False, errors=[str(e)])
+
+
+class RepostPost(graphene.Mutation):
+    class Arguments:
+        post_id = graphene.Int(required=True)
+
+    post = graphene.Field(PostType)
+    success = graphene.Boolean()
+    errors = graphene.List(graphene.String)
+
+    @classmethod
+    @login_required
+    def mutate(cls, root, info, post_id):
+        user = info.context.user
+
+        try:
+            original_post = Post.objects.get(pk=post_id)
+
+            # Check if user already reposted this
+            existing_repost = Post.objects.filter(
+                author=user,
+                quoted_post=original_post,
+                is_repost=True
+            ).first()
+
+            if existing_repost:
+                # Toggle: delete the repost
+                existing_repost.delete()
+                original_post.reposts_count = max(0, original_post.reposts_count - 1)
+                original_post.save(update_fields=["reposts_count"])
+                return RepostPost(post=original_post, success=True, errors=None)
+
+            # Create repost (no content, just reference)
+            repost = Post.objects.create(
+                author=user,
+                content="",  # Empty content for pure reposts
+                quoted_post=original_post,
+                is_repost=True
+            )
+
+            # Increment repost count on original
+            original_post.reposts_count += 1
+            original_post.save(update_fields=["reposts_count"])
+
+            return RepostPost(post=repost, success=True, errors=None)
+        except Post.DoesNotExist:
+            return RepostPost(post=None, success=False, errors=["Post not found"])
+        except Exception as e:
+            return RepostPost(post=None, success=False, errors=[str(e)])
 
 
 # ============================================
@@ -715,6 +789,7 @@ class Mutation(graphene.ObjectType):
     create_comment = CreateComment.Field()
     toggle_like = ToggleLike.Field()
     share_post = SharePost.Field()
+    repost_post = RepostPost.Field()
 
     # Profile actions
     update_profile = UpdateProfile.Field()

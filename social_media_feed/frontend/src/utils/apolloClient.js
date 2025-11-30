@@ -3,7 +3,7 @@ import { setContext } from '@apollo/client/link/context';
 
 // HTTP connection to the API
 const httpLink = createHttpLink({
-  uri: import.meta.env.VITE_GRAPHQL_API_URL || 'https://alx-project-nexus-vetk.onrender.com/graphql/',
+  uri: import.meta.env.VITE_GRAPHQL_API_URL || 'http://localhost:8000/graphql/',
 });
 
 // Authentication link to add JWT token to requests

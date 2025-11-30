@@ -14,6 +14,23 @@ export const GET_POSTS = gql`
       likesCount
       commentsCount
       sharesCount
+      quotesCount
+      repostsCount
+      isRepost
+      quotedPost {
+        id
+        content
+        author {
+          id
+          username
+        }
+        createdAt
+        likesCount
+        commentsCount
+        sharesCount
+        quotesCount
+        repostsCount
+      }
       comments {
         id
         content

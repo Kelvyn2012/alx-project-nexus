@@ -1,5 +1,5 @@
 from pathlib import Path
-from dotenv import load_dotenv
+from decouple import config,Csv
 import os
 import dj_database_url
 from datetime import timedelta
@@ -7,18 +7,16 @@ from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / ".env")
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -89,25 +87,38 @@ WSGI_APPLICATION = 'social_media_feed.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Use DATABASE_URL if available (Render provides this), otherwise use individual settings
-if os.environ.get('DATABASE_URL'):
+DATABASE_URL = config('DATABASE_URL', default=None)
+
+if DATABASE_URL:
+    # Ensure the URL starts with postgres:// or postgresql://
+    if DATABASE_URL.startswith('postgres://'):
+        DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+
     DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get("DATABASE_URL"),
-            conn_max_age=600
-        )
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
 else:
-    # Fallback to individual settings for local development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('POSTGRES_DB', 'social_feed'),
-            'USER': os.environ.get('POSTGRES_USER', 'postgres'),
-            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
+    DB_ENGINE = config('DB_ENGINE', default='django.db.backends.postgresql')
+
+    if DB_ENGINE == 'django.db.backends.sqlite3':
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / config('DB_NAME', default='db.sqlite3'),
+            }
         }
-    }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': DB_ENGINE,
+                'NAME': config('DB_NAME', default='social_feed'),
+                'USER': config('DB_USER', default='postgres'),
+                'PASSWORD': config('DB_PASSWORD', default='postgres'),
+                'HOST': config('DB_HOST', default='localhost'),
+                'PORT': config('DB_PORT', default='5432'),
+            }
+        }
+
 
 
 # Password validation
