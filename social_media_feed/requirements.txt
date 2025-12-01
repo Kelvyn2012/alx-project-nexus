@@ -3,7 +3,6 @@ dj-database-url==3.0.1
 Django==5.2.8
 django-filter==25.2
 graphene==3.4.3
-dotenv==1.0.0
 graphene-django==3.2.3
 graphql-core==3.2.7
 graphql-relay==3.2.0
